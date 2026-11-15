@@ -66,6 +66,10 @@
       </router-link>
     </nav>
   </div>
+
+  <!-- 跨页面常驻桌宠：挂载在根层（router-view 之外），路由切换不销毁。
+       有宠物且非领养/编辑向导时挂载；在陪伴页用 v-show 隐藏（保持挂载、状态连贯）。 -->
+  <FloatingPet v-if="hasPet && !isOnboarding" v-show="route.name !== 'companion'" />
 </template>
 
 <script setup>
@@ -75,6 +79,7 @@ import { ElMessage } from './ui.js'
 import { NAV } from './router.js'
 import { state, hasPet, pet, loadMe } from './store.js'
 import { api } from './api.js'
+import FloatingPet from './components/FloatingPet.vue'
 
 const route = useRoute()
 const tabs = NAV.filter((i) => i.tab)
