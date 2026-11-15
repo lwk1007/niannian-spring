@@ -21,7 +21,7 @@
       <figure v-for="p in photos" :key="p.id" class="album-cell">
         <img :src="p.data" :alt="p.note || '照片'" loading="lazy" />
         <figcaption v-if="p.note">{{ p.note }}</figcaption>
-        <time>{{ fmtDate(p.createdAt) }}</time>
+        <time :title="fmtFull(p.createdAt)">{{ fmtRelative(p.createdAt) }}</time>
         <div class="album-tools">
           <button class="album-tool" title="写一句备注" @click="editNote(p)">✎</button>
           <button class="album-tool" title="删除这张" @click="remove(p)">×</button>
@@ -35,7 +35,7 @@
 import { onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from '../ui.js'
 import { api } from '../api.js'
-import { shrinkImage, fmtDate } from '../format.js'
+import { shrinkImage, fmtRelative, fmtFull } from '../format.js'
 
 const photos = ref([])
 const loading = ref(true)

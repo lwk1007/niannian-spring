@@ -51,7 +51,7 @@
         <i :style="{ background: meta(item.mood).color }"></i>
         <div>
           <b>{{ meta(item.mood).label }}</b>
-          <time>{{ fmtDate(item.createdAt) }}</time>
+          <time :title="fmtFull(item.createdAt)">{{ fmtRelative(item.createdAt) }}</time>
           <p v-if="item.note">{{ item.note }}</p>
         </div>
       </li>
@@ -64,7 +64,7 @@ import { onMounted, ref } from 'vue'
 import { ElMessage } from '../ui.js'
 import { options, moodMeta } from '../store.js'
 import { api } from '../api.js'
-import { fmtDate, todayStr } from '../format.js'
+import { fmtRelative, fmtFull, todayStr } from '../format.js'
 
 const list = ref([])
 const loading = ref(true)

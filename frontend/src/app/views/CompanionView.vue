@@ -30,13 +30,13 @@
 
     <div class="act-row">
       <button class="act" :disabled="busy || cooldowns.touch > 0" @click="hit('touch')">
-        <b>{{ cooldowns.touch > 0 ? `摸摸 ${cooldowns.touch}s` : '摸摸' }}</b><i>把手放上去</i>
+        <b>{{ cooldowns.touch > 0 ? `摸摸 · ${cooldowns.touch} 秒` : '摸摸' }}</b><i>把手放上去</i>
       </button>
       <button class="act" :disabled="busy || cooldowns.feed > 0" @click="hit('feed')">
-        <b>{{ cooldowns.feed > 0 ? `喂食 ${cooldowns.feed}s` : '喂食' }}</b><i>给它一点好吃的</i>
+        <b>{{ cooldowns.feed > 0 ? `喂食 · ${cooldowns.feed} 秒` : '喂食' }}</b><i>给它一点好吃的</i>
       </button>
       <button class="act" :disabled="busy || cooldowns.play > 0" @click="hit('play')">
-        <b>{{ cooldowns.play > 0 ? `玩耍 ${cooldowns.play}s` : '玩耍' }}</b><i>陪它跑一会儿</i>
+        <b>{{ cooldowns.play > 0 ? `玩耍 · ${cooldowns.play} 秒` : '玩耍' }}</b><i>陪它跑一会儿</i>
       </button>
     </div>
 

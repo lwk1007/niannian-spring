@@ -8,7 +8,7 @@
 
     <template v-else>
       <article v-if="latest" class="letter-paper">
-        <div class="letter-meta">{{ fmtDate(latest.createdAt) }}</div>
+        <div class="letter-meta" :title="fmtFull(latest.createdAt)">{{ fmtRelative(latest.createdAt) }}</div>
         <div class="letter-body serif">{{ latest.content }}</div>
       </article>
 
@@ -32,7 +32,7 @@
           <el-collapse-item v-for="item in older" :key="item.id" :name="item.id">
             <template #title>
               <span class="letter-summary">
-                <time>{{ fmtDate(item.createdAt) }}</time>
+                <time :title="fmtFull(item.createdAt)">{{ fmtRelative(item.createdAt) }}</time>
                 <i>{{ firstLine(item.content) }}</i>
               </span>
             </template>
@@ -48,7 +48,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { ElMessage } from '../ui.js'
 import { api } from '../api.js'
-import { fmtDate } from '../format.js'
+import { fmtRelative, fmtFull } from '../format.js'
 
 const list = ref([])
 const loading = ref(true)

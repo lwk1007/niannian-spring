@@ -79,7 +79,7 @@
               <div class="visitor-item-meta">
                 <span class="visitor-kind">{{ kindLabel(it.kind) }}</span>
                 <span class="visitor-name">{{ it.name || '匿名访客' }}</span>
-                <time class="visitor-time">{{ fmtDate(it.createdAt) }}</time>
+                <time class="visitor-time" :title="fmtFull(it.createdAt)">{{ fmtRelative(it.createdAt) }}</time>
                 <span v-if="it.status === 0" class="visitor-tag">待审核</span>
                 <span v-else-if="it.status === 2" class="visitor-tag muted">已隐藏</span>
               </div>
@@ -116,7 +116,7 @@ import { useRouter } from 'vue-router'
 import PetFigure from '../components/PetFigure.vue'
 import { pet, loadMe } from '../store.js'
 import { api } from '../api.js'
-import { todayStr, fmtDate } from '../format.js'
+import { todayStr, fmtRelative, fmtFull } from '../format.js'
 
 const router = useRouter()
 

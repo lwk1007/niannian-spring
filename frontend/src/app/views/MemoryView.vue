@@ -34,7 +34,7 @@
             <div class="tl-body">
               <div class="tl-top">
                 <b>{{ item.title }}</b>
-                <time>{{ fmtDate(item.at) }}</time>
+                <time :title="fmtFull(item.at)">{{ fmtRelative(item.at) }}</time>
               </div>
               <p>{{ item.text }}</p>
               <div v-if="isEditable(item)" class="tl-ops">
@@ -73,7 +73,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from '../ui.js'
 import { pet } from '../store.js'
 import { api } from '../api.js'
-import { fmtDate, fmtMonth, anniversaryText, nextMilestone, todayStr } from '../format.js'
+import { fmtRelative, fmtFull, fmtMonth, anniversaryText, nextMilestone, todayStr } from '../format.js'
 
 const items = ref([])
 const loading = ref(true)

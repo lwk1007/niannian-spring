@@ -7,6 +7,44 @@ export function fmtDate(ts) {
   return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}`
 }
 
+/** 完整时刻「2026.11.15 23:40」，用于悬停提示精确时间。 */
+export function fmtFull(ts) {
+  if (!ts) return ''
+  const d = new Date(ts)
+  if (Number.isNaN(d.getTime())) return String(ts)
+  return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+/** 两个时间点的「自然日」差（日历语义，非 24h 近似），b 相对 a 的天数。 */
+function calendarDayDiff(a, b) {
+  const d1 = new Date(a.getFullYear(), a.getMonth(), a.getDate()).getTime()
+  const d2 = new Date(b.getFullYear(), b.getMonth(), b.getDate()).getTime()
+  return Math.round((d2 - d1) / 86400000)
+}
+
+/**
+ * 智能相对时间：近期显示「刚刚 / X 分钟前 / X 小时前 / 昨天 / 前天 / X 天前」，
+ * 超过 30 天回落绝对日期（与 GitHub relative-time-element 的默认阈值一致）。
+ * 未来时间（如胶囊解锁日）直接回绝对日期，不硬凑相对词。
+ */
+export function fmtRelative(ts) {
+  if (!ts) return ''
+  const d = new Date(ts)
+  if (Number.isNaN(d.getTime())) return String(ts)
+  const diff = Date.now() - d.getTime()
+  if (diff < 0) return fmtDate(ts)
+  const sec = Math.floor(diff / 1000)
+  if (sec < 60) return '刚刚'
+  const min = Math.floor(sec / 60)
+  if (min < 60) return `${min} 分钟前`
+  const dayDiff = calendarDayDiff(d, new Date())
+  if (dayDiff === 0) return `${Math.floor(min / 60)} 小时前`
+  if (dayDiff === 1) return '昨天'
+  if (dayDiff === 2) return '前天'
+  if (dayDiff < 30) return `${dayDiff} 天前`
+  return fmtDate(ts)
+}
+
 export function fmtMonth(ts) {
   const d = new Date(ts)
   return `${d.getFullYear()} 年 ${d.getMonth() + 1} 月`

@@ -37,7 +37,7 @@
 
     <ul v-else class="tribute-list">
       <li v-for="item in list" :key="item.id">
-        <time>{{ fmtDate(item.createdAt) }}</time>
+        <time :title="fmtFull(item.createdAt)">{{ fmtRelative(item.createdAt) }}</time>
         <p class="serif">{{ item.content }}</p>
       </li>
     </ul>
@@ -48,7 +48,7 @@
 import { onMounted, ref } from 'vue'
 import { ElMessage } from '../ui.js'
 import { api } from '../api.js'
-import { fmtDate } from '../format.js'
+import { fmtRelative, fmtFull } from '../format.js'
 
 const list = ref([])
 const count = ref(0)
