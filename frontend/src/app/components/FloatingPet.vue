@@ -11,25 +11,27 @@
       <div
         ref="bodyEl"
         class="fp-body"
-        :class="{ dragging }"
-        title="拖拽移动 · 单击摸摸 · 双击回陪伴页"
+        :class="{ dragging, atEdge }"
+        title="拖拽移动（限制在右下角活动区）· 单击摸摸 · 双击回陪伴页"
         @pointerdown="onDown"
       >
-        <img
-          v-if="cutout"
-          class="fp-img fp-cut"
-          :src="cutout"
-          :alt="name"
-          draggable="false"
-        />
-        <img
-          v-else-if="photo"
-          class="fp-img fp-photo"
-          :src="photo"
-          :alt="name"
-          draggable="false"
-        />
-        <span v-else class="fp-generic">{{ emoji }}</span>
+        <div class="fp-sprite" :class="idleClass">
+          <img
+            v-if="cutout"
+            class="fp-img fp-cut"
+            :src="cutout"
+            :alt="name"
+            draggable="false"
+          />
+          <img
+            v-else-if="photo"
+            class="fp-img fp-photo"
+            :src="photo"
+            :alt="name"
+            draggable="false"
+          />
+          <span v-else class="fp-generic">{{ emoji }}</span>
+        </div>
         <span v-if="heartKey" :key="heartKey" class="fp-heart">💛</span>
       </div>
       <div v-if="bubble" class="fp-bubble">{{ bubble }}</div>
@@ -59,11 +61,19 @@ const emoji = computed(() => ({ cat: '🐱', dog: '🐶', other: '🐾' }[type.v
 const collapsed = ref(loadCollapsed())
 const pos = reactive({ x: 0, y: 0 })
 const dragging = ref(false)
+const atEdge = ref(false)
+const idleClass = ref('')
 const bubble = ref('')
 const heartKey = ref(0)
 
+// 宠物本体 DOM 引用（模板 ref）—— 之前漏定义，导致 onDown 里 bodyEl.value 抛异常，
+// 进而 window 的 pointermove/pointerup 监听器没注册，拖拽与双击全部失效。
+const bodyEl = ref(null)
+
 let bubbleTimer = null
 let clickTimer = null
+let idleTimer = null
+let idleActTimer = null
 let lastClickAt = 0
 let reducedMotion = false
 
@@ -102,26 +112,42 @@ function savePos() {
   }
 }
 
-/** 视口安全边距：顶部留气泡空间，移动端底部抬高避开标签栏。 */
-function insets() {
-  const mobile = window.innerWidth <= 860
-  return { top: 46, bottom: mobile ? 78 : 20, side: 4 }
+/**
+ * 固定活动区域（隐形）：宠物只能在这块右下角矩形内移动。
+ * 参考大肥鱼（dsh-pet）的「锁定在当前屏幕」思路 —— 以屏幕工作区为界，宠物漫游/拖拽不越界。
+ * 区域本身不绘制边框，用户看不到；只有在拖动碰到边界时的「贴边挤压」才能感知到边界。
+ */
+function getArea() {
+  const vw = window.innerWidth
+  const vh = window.innerHeight
+  const mobile = vw <= 860
+  const margin = mobile ? 14 : 20
+  // 移动端底部留白更多，避开底部标签栏
+  const bottom = mobile ? 84 : 20
+  const w = Math.min(380, Math.max(280, vw * 0.42))
+  const h = Math.min(500, Math.max(360, vh * 0.55))
+  return {
+    left: vw - w - margin,
+    top: vh - h - bottom,
+    right: vw - margin,
+    bottom: vh - bottom
+  }
 }
 
 function clamp() {
   const size = collapsed.value ? ORB : PET
-  const in_ = insets()
-  const maxX = Math.max(in_.side, window.innerWidth - size - in_.side)
-  const maxY = Math.max(in_.top, window.innerHeight - size - in_.bottom)
-  pos.x = Math.min(Math.max(in_.side, pos.x), maxX)
-  pos.y = Math.min(Math.max(in_.top, pos.y), maxY)
+  const a = getArea()
+  const maxX = Math.max(a.left, a.right - size)
+  const maxY = Math.max(a.top, a.bottom - size)
+  pos.x = Math.min(Math.max(a.left, pos.x), maxX)
+  pos.y = Math.min(Math.max(a.top, pos.y), maxY)
 }
 
 function toDefault() {
   const size = collapsed.value ? ORB : PET
-  const in_ = insets()
-  pos.x = window.innerWidth - size - 20
-  pos.y = window.innerHeight - size - in_.bottom
+  const a = getArea()
+  pos.x = a.right - size - 8
+  pos.y = a.bottom - size - 8
   clamp()
 }
 
@@ -147,13 +173,7 @@ function onDown(e) {
   originY = pos.y
   moved = false
   dragging.value = true
-  if (e.pointerId != null && bodyEl.value) {
-    try {
-      bodyEl.value.setPointerCapture(e.pointerId)
-    } catch (err) {
-      /* ignore */
-    }
-  }
+  atEdge.value = false
   window.addEventListener('pointermove', onMove)
   window.addEventListener('pointerup', onUp)
   window.addEventListener('pointercancel', onUp)
@@ -165,9 +185,13 @@ function onMove(e) {
   const dy = e.clientY - startY
   if (!moved && Math.abs(dx) + Math.abs(dy) > 5) moved = true
   if (!moved) return
-  pos.x = originX + dx
-  pos.y = originY + dy
+  const rawX = originX + dx
+  const rawY = originY + dy
+  pos.x = rawX
+  pos.y = rawY
   clamp()
+  // 贴边：clamp 把位置顶回去了，说明碰到了活动区域边界，触发挤压反馈
+  atEdge.value = Math.abs(pos.x - rawX) > 0.5 || Math.abs(pos.y - rawY) > 0.5
 }
 
 function onUp() {
@@ -176,6 +200,7 @@ function onUp() {
   window.removeEventListener('pointercancel', onUp)
   if (!dragging.value) return
   dragging.value = false
+  atEdge.value = false
   if (moved) {
     savePos()
   } else {
@@ -241,6 +266,25 @@ function expand() {
   savePos()
 }
 
+/* ---- 待机动画：区域内随机小动作（参考 dsh-pet 的 idle 调度） ---- */
+function scheduleIdle() {
+  clearTimeout(idleTimer)
+  idleTimer = setTimeout(() => {
+    if (!dragging.value && !collapsed.value && !reducedMotion) {
+      doIdle()
+    }
+    scheduleIdle()
+  }, 5000 + Math.random() * 7000)
+}
+
+function doIdle() {
+  const acts = ['blink', 'sway', 'hop', 'blink', 'sway']
+  const act = acts[Math.floor(Math.random() * acts.length)]
+  idleClass.value = 'fp-' + act
+  clearTimeout(idleActTimer)
+  idleActTimer = setTimeout(() => (idleClass.value = ''), 900)
+}
+
 /* ---- 生命周期 ---- */
 function onResize() {
   clamp()
@@ -255,11 +299,14 @@ onMounted(() => {
   }
   loadPos()
   window.addEventListener('resize', onResize)
+  scheduleIdle()
 })
 
 onBeforeUnmount(() => {
   clearTimeout(bubbleTimer)
   clearTimeout(clickTimer)
+  clearTimeout(idleTimer)
+  clearTimeout(idleActTimer)
   window.removeEventListener('resize', onResize)
   window.removeEventListener('pointermove', onMove)
   window.removeEventListener('pointerup', onUp)
@@ -327,6 +374,18 @@ onBeforeUnmount(() => {
   .fp-body {
     animation: none;
   }
+}
+
+/* 待机动作层：与 .fp-body 的呼吸浮动解耦，互不覆盖 transform */
+.fp-sprite {
+  width: 96px;
+  height: 96px;
+  transform-origin: 50% 80%;
+  transition: transform 0.18s ease;
+}
+/* 贴边挤压：拖动碰到活动区域边界时的反馈，让用户“感知”到隐形边界 */
+.fp-body.atEdge .fp-sprite {
+  transform: scale(0.92, 0.86);
 }
 
 .fp-img {
@@ -496,6 +555,57 @@ onBeforeUnmount(() => {
   to {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* ---- 待机动作动画 ---- */
+@keyframes fp-blink {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(0.82);
+  }
+}
+@keyframes fp-sway {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+@keyframes fp-hop {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-13px);
+  }
+  60% {
+    transform: translateY(-13px);
+  }
+}
+.fp-sprite.fp-blink {
+  animation: fp-blink 0.5s ease-in-out;
+}
+.fp-sprite.fp-sway {
+  animation: fp-sway 0.9s ease-in-out;
+}
+.fp-sprite.fp-hop {
+  animation: fp-hop 0.9s ease-in-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fp-sprite.fp-blink,
+  .fp-sprite.fp-sway,
+  .fp-sprite.fp-hop {
+    animation: none;
   }
 }
 </style>
