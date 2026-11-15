@@ -24,6 +24,7 @@ import site.niannian.tribute.TributeMapper;
 import site.niannian.visitor.VisitorTribute;
 import site.niannian.visitor.VisitorTributeMapper;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -163,6 +164,26 @@ public class PetService {
     public record Interaction(String line, PetView.Stats stats, Intimacy intimacy, boolean levelUp) {
     }
 
+    /** 一天最多喂几次。 */
+    private static final int MAX_FEED_PER_DAY = 3;
+
+    /** 每种互动的冷却时长（毫秒）。连点时后端兜底，防止刷亲密度。 */
+    private static long cooldownMillis(String action) {
+        return switch (action) {
+            case "feed" -> 5_000;
+            case "play" -> 8_000;
+            default -> 2_000; // touch
+        };
+    }
+
+    private static String cooldownMessage(String action, long remainSec) {
+        return switch (action) {
+            case "feed" -> "刚喂过它啦，再等 " + remainSec + " 秒吧";
+            case "play" -> "它玩累了，再等 " + remainSec + " 秒吧";
+            default -> "摸得太勤啦，再等 " + remainSec + " 秒吧";
+        };
+    }
+
     @Transactional
     public Interaction interact(Long userId, String rawAction) {
         Pet pet = require(userId);
@@ -170,6 +191,33 @@ public class PetService {
             case "feed", "play", "touch" -> rawAction;
             default -> "touch";
         };
+
+        // 冷却兜底：同一动作不能无限连点。查明细表最近一条，比前端倒计时更可靠。
+        InteractionLog last = interactionLogMapper.selectOne(new LambdaQueryWrapper<InteractionLog>()
+                .eq(InteractionLog::getUserId, userId)
+                .eq(InteractionLog::getAction, action)
+                .orderByDesc(InteractionLog::getCreatedAt)
+                .last("LIMIT 1"));
+        if (last != null) {
+            long elapsed = Duration.between(last.getCreatedAt(), LocalDateTime.now()).toMillis();
+            long cooldown = cooldownMillis(action);
+            if (elapsed < cooldown) {
+                long remainSec = (cooldown - elapsed + 999) / 1000;
+                throw new BizException(429, cooldownMessage(action, remainSec));
+            }
+        }
+
+        // 喂食每日上限：吃太饱不健康，一天最多几次。
+        if ("feed".equals(action)) {
+            long fedToday = interactionLogMapper.selectCount(new LambdaQueryWrapper<InteractionLog>()
+                    .eq(InteractionLog::getUserId, userId)
+                    .eq(InteractionLog::getAction, "feed")
+                    .ge(InteractionLog::getCreatedAt, LocalDate.now().atStartOfDay()));
+            if (fedToday >= MAX_FEED_PER_DAY) {
+                throw new BizException(429, "今天喂得够多了，它已经饱啦，明天再来吧");
+            }
+        }
+
         int levelBefore = Intimacy.levelOf(Intimacy.xpOf(
                 new PetView.Stats(pet.getStatTouch(), pet.getStatFeed(), pet.getStatPlay())));
         switch (action) {

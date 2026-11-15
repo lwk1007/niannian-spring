@@ -44,14 +44,19 @@ const run = async () => {
   check('空名字 400 + 中文提示', r.status === 400 && r.json.message === '给它一个名字吧', r.json);
 
   console.log('— 互动 —');
-  const actions = ['touch', 'touch', 'feed', 'play', 'touch'];
-  let lastLine = '';
-  for (const a of actions) {
-    r = await call('POST', '/api/pet/interact', { action: a });
-    lastLine = r.json.data.line;
-  }
-  check('互动计数 touch=3 feed=1 play=1', r.json.data.stats.touch === 3 && r.json.data.stats.feed === 1 && r.json.data.stats.play === 1, r.json.data.stats);
-  check('返回人格化台词', typeof lastLine === 'string' && lastLine.length > 4, lastLine);
+  r = await call('POST', '/api/pet/interact', { action: 'touch' });
+  check('首次摸摸 200', r.status === 200, r);
+  const firstLine = r.json.data.line;
+  r = await call('POST', '/api/pet/interact', { action: 'touch' });
+  check('连点摸摸 429（冷却兜底）', r.status === 429 && r.json.message.includes('秒'), r.json);
+  r = await call('POST', '/api/pet/interact', { action: 'feed' });
+  check('首次喂食 200', r.status === 200, r);
+  r = await call('POST', '/api/pet/interact', { action: 'feed' });
+  check('连点喂食 429', r.status === 429, r.status);
+  r = await call('POST', '/api/pet/interact', { action: 'play' });
+  check('首次玩耍 200', r.status === 200, r);
+  check('互动计数 touch=1 feed=1 play=1', r.json.data.stats.touch === 1 && r.json.data.stats.feed === 1 && r.json.data.stats.play === 1, r.json.data.stats);
+  check('返回人格化台词', typeof firstLine === 'string' && firstLine.length > 4, firstLine);
 
   console.log('— 心情 —');
   r = await call('POST', '/api/moods', { mood: 'miss', note: '今天看到一只很像你的猫，跟了两条街。' });
@@ -71,7 +76,7 @@ const run = async () => {
   r = await call('POST', '/api/letters', {});
   check('生成信件 200 + isDemo=1', r.status === 200 && r.json.data.item.isDemo === 1, r.json.data);
   const letterText = r.json.data.item.content;
-  check('信里引用了真实互动数字', letterText.includes('摸过我 3 次') && letterText.includes('喂过我 1 次'), letterText.slice(0, 160));
+  check('信里引用了真实互动数字', letterText.includes('摸过我 1 次') && letterText.includes('喂过我 1 次'), letterText.slice(0, 160));
   check('信里有宠物署名', letterText.includes('—— 豆豆'), letterText.slice(-40));
   r = await call('POST', '/api/letters', {});
   check('60 秒内重复写信 429', r.status === 429 && r.json.message.includes('缓一缓'), r.json);

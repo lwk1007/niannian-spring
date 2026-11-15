@@ -17,10 +17,18 @@ async function request(url, opts = {}) {
   }
 
   if (typeof body.success === 'boolean') {
-    if (!body.success) throw new Error(body.message || '请求失败')
+    if (!body.success) {
+      const err = new Error(body.message || '请求失败')
+      err.status = body.code
+      throw err
+    }
     return body.data ?? {}
   }
-  if (!res.ok) throw new Error(body.message || body.error || '请求失败')
+  if (!res.ok) {
+    const err = new Error(body.message || body.error || '请求失败')
+    err.status = res.status
+    throw err
+  }
   return body
 }
 

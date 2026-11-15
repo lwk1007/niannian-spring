@@ -29,14 +29,14 @@
     </div>
 
     <div class="act-row">
-      <button class="act" :disabled="busy" @click="hit('touch')">
-        <b>摸摸</b><i>把手放上去</i>
+      <button class="act" :disabled="busy || cooldowns.touch > 0" @click="hit('touch')">
+        <b>{{ cooldowns.touch > 0 ? `摸摸 ${cooldowns.touch}s` : '摸摸' }}</b><i>把手放上去</i>
       </button>
-      <button class="act" :disabled="busy" @click="hit('feed')">
-        <b>喂食</b><i>给它一点好吃的</i>
+      <button class="act" :disabled="busy || cooldowns.feed > 0" @click="hit('feed')">
+        <b>{{ cooldowns.feed > 0 ? `喂食 ${cooldowns.feed}s` : '喂食' }}</b><i>给它一点好吃的</i>
       </button>
-      <button class="act" :disabled="busy" @click="hit('play')">
-        <b>玩耍</b><i>陪它跑一会儿</i>
+      <button class="act" :disabled="busy || cooldowns.play > 0" @click="hit('play')">
+        <b>{{ cooldowns.play > 0 ? `玩耍 ${cooldowns.play}s` : '玩耍' }}</b><i>陪它跑一会儿</i>
       </button>
     </div>
 
@@ -91,7 +91,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, reactive, ref, onBeforeUnmount } from 'vue'
 import { ElMessage } from '../ui.js'
 import SceneStage from '../components/SceneStage.vue'
 import { pet, loadMe } from '../store.js'
@@ -100,6 +100,29 @@ import { api } from '../api.js'
 const stage = ref(null)
 const busy = ref(false)
 const watering = ref(false)
+
+// 每动作独立冷却（秒），与后端一致：touch 2 / feed 5 / play 8。
+// 前端倒计时只负责「少发请求」，真正兜底的是后端 429。
+const COOLDOWN = { touch: 2, feed: 5, play: 8 }
+const cooldowns = reactive({ touch: 0, feed: 0, play: 0 })
+const cooldownTimers = {}
+
+function startCooldown(action, seconds) {
+  cooldowns[action] = seconds
+  clearInterval(cooldownTimers[action])
+  cooldownTimers[action] = setInterval(() => {
+    cooldowns[action] -= 1
+    if (cooldowns[action] <= 0) {
+      cooldowns[action] = 0
+      clearInterval(cooldownTimers[action])
+      cooldownTimers[action] = null
+    }
+  }, 1000)
+}
+
+onBeforeUnmount(() => {
+  Object.values(cooldownTimers).forEach((t) => t && clearInterval(t))
+})
 
 const stats = computed(() => pet.value.stats || {})
 const intimacy = computed(() => pet.value.intimacy || null)
@@ -178,11 +201,14 @@ const greetingText = computed(() => {
 
 async function hit(action) {
   if (busy.value) return
+  if (cooldowns[action] > 0) return
   busy.value = true
   try {
     const r = await api.interact(action)
     if (stage.value) stage.value.play(action, r.line)
     await loadMe()
+    // 成功后本地进入冷却，和按钮的倒计时联动
+    startCooldown(action, COOLDOWN[action] || 2)
     if (r.levelUp && r.intimacy) {
       // 升级单独庆祝一次：舞台气泡换成长文案，避免和互动台词互相覆盖
       setTimeout(() => {
@@ -192,6 +218,10 @@ async function hit(action) {
       }, 900)
     }
   } catch (e) {
+    if (e.status === 429) {
+      // 多标签页 / 清了缓存等绕过前端倒计时的场景：后端已兜底，本地同样补一段冷却
+      startCooldown(action, COOLDOWN[action] || 2)
+    }
     ElMessage.error(e.message)
   } finally {
     busy.value = false
