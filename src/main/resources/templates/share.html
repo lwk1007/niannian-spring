@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title th:text="${v.pet.name + ' · 纪念页'}">纪念页</title>
+    <meta property="og:title" th:content="${v.pet.name + ' · 纪念页'}">
+    <meta property="og:description"
+          th:content="${v.pet.ownerTitle + ' 为 ' + v.pet.name + ' 留了一个地方，记录陪伴过的每一天。'}">
+    <meta property="og:type" content="website">
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="share-body">
+<main class="share-wrap" th:attr="data-share=${shareId}">
+    <div class="memorial">
+        <div class="memorial-head">
+            <div class="avatar" th:utext="${avatar}"></div>
+            <h1 th:text="${v.pet.name}">名字</h1>
+            <p class="sub"
+               th:text="${v.pet.personalityLabel + ' · 陪伴了 ' + v.days + ' 天 · ' + v.candles + ' 次点灯'}"></p>
+            <p class="sub" th:text="${v.pet.ownerTitle + ' 为它留了这个地方'}"></p>
+        </div>
+
+        <!-- 访客留下的花与烛 -->
+        <div class="guest-counts">
+            <span class="count-item">🌸 <b id="flowerCount" th:text="${v.flowers}">0</b> 朵花</span>
+            <span class="count-item">🕯️ <b id="candleCount" th:text="${v.guestCandles}">0</b> 支烛</span>
+        </div>
+
+        <!-- 访客互动区 -->
+        <div class="guest" th:if="${v.allowGuest}">
+            <div class="guest-actions">
+                <button class="guest-btn" id="flowerBtn" type="button">🌸 献一朵花</button>
+                <button class="guest-btn" id="candleBtn" type="button">🕯️ 点一支烛</button>
+            </div>
+            <form class="guest-form" id="guestForm">
+                <input class="guest-name" id="guestName" maxlength="20" placeholder="怎么称呼你（可留空）">
+                <textarea class="guest-text" id="guestText" maxlength="500"
+                          placeholder="想对 TA 说的话…" required></textarea>
+                <button type="submit" class="btn btn-primary" id="guestSubmit">留下这句话</button>
+                <p class="guest-hint" th:if="${v.moderate}">你的留言会先由主人看过，再出现在这里</p>
+            </form>
+        </div>
+        <p class="guest-hint guest-closed" th:unless="${v.allowGuest}">主人暂未开放留言与献花</p>
+
+        <!-- 他们来过 -->
+        <div class="guest-list" th:if="${!#lists.isEmpty(guestRows)}">
+            <h3 class="guest-list-title">他们来过</h3>
+            <div class="guest-item" th:each="m : ${guestRows}">
+                <div class="guest-item-head">
+                    <span class="guest-item-name" th:text="${m.name}">访客</span>
+                    <time class="guest-item-time" th:text="${m.date}"></time>
+                </div>
+                <p class="guest-item-text" th:text="${m.text}"></p>
+            </div>
+        </div>
+
+        <ul class="timeline">
+            <li class="tl-item" th:each="r : ${rows}">
+                <time th:text="${r.date}"></time>
+                <h4 th:text="${r.title}"></h4>
+                <p th:text="${r.text}"></p>
+            </li>
+            <li class="empty" th:if="${#lists.isEmpty(rows)}">还没有留下记录。</li>
+        </ul>
+        <p class="foot">这是一个只读的纪念页 · 由「念念」生成</p>
+        <div class="share-cta">
+            <a class="btn btn-primary" href="/app">我也为 TA 建一个空间</a>
+        </div>
+    </div>
+</main>
+
+<script>
+(function () {
+  var wrap = document.querySelector('.share-wrap');
+  if (!wrap) return;
+  var shareId = wrap.getAttribute('data-share');
+  if (!shareId) return;
+
+  function post(kind, content, name) {
+    return fetch('/api/public/' + encodeURIComponent(shareId) + '/tribute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kind: kind, content: content || '', name: name || '' })
+    }).then(function (r) {
+      return r.json().then(function (b) {
+        if (!b.success) throw new Error(b.message || '没有送达');
+        return b.data || {};
+      });
+    });
+  }
+
+  function bump(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var n = parseInt(el.textContent, 10) || 0;
+    el.textContent = n + 1;
+  }
+
+  function flash(btn, okText) {
+    var old = btn.textContent;
+    btn.textContent = okText;
+    btn.disabled = true;
+    setTimeout(function () {
+      btn.textContent = old;
+      btn.disabled = false;
+    }, 1200);
+  }
+
+  var flowerBtn = document.getElementById('flowerBtn');
+  var candleBtn = document.getElementById('candleBtn');
+  if (flowerBtn) {
+    flowerBtn.addEventListener('click', function () {
+      post('flower').then(function () {
+        bump('flowerCount');
+        flash(flowerBtn, '🌸 已献上');
+      }).catch(function (e) {
+        flash(flowerBtn, e.message || '再试一次');
+      });
+    });
+  }
+  if (candleBtn) {
+    candleBtn.addEventListener('click', function () {
+      post('candle').then(function () {
+        bump('candleCount');
+        flash(candleBtn, '🕯️ 已点亮');
+      }).catch(function (e) {
+        flash(candleBtn, e.message || '再试一次');
+      });
+    });
+  }
+
+  var form = document.getElementById('guestForm');
+  if (form) {
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var text = document.getElementById('guestText');
+      var name = document.getElementById('guestName');
+      var btn = document.getElementById('guestSubmit');
+      var content = (text.value || '').trim();
+      if (!content) return;
+      btn.disabled = true;
+      var oldText = btn.textContent;
+      btn.textContent = '正在送达…';
+      post('message', content, name.value).then(function (d) {
+        if (d.pending) {
+          btn.textContent = '已提交，等主人看过';
+          text.value = '';
+          return;
+        }
+        // 即时可见：把这条留言插到列表顶部
+        var list = document.querySelector('.guest-list');
+        var title = document.querySelector('.guest-list-title');
+        if (!list) {
+          list = document.createElement('div');
+          list.className = 'guest-list';
+          title = document.createElement('h3');
+          title.className = 'guest-list-title';
+          title.textContent = '他们来过';
+          list.appendChild(title);
+          var tl = document.querySelector('.timeline');
+          if (tl) tl.parentNode.insertBefore(list, tl);
+        }
+        var item = document.createElement('div');
+        item.className = 'guest-item';
+        var head = document.createElement('div');
+        head.className = 'guest-item-head';
+        var nm = document.createElement('span');
+        nm.className = 'guest-item-name';
+        nm.textContent = (name.value || '').trim() || '一位访客';
+        var tm = document.createElement('time');
+        tm.className = 'guest-item-time';
+        var now = new Date();
+        tm.textContent = now.getFullYear() + '.' + (now.getMonth() + 1) + '.' + now.getDate();
+        head.appendChild(nm);
+        head.appendChild(tm);
+        var p = document.createElement('p');
+        p.className = 'guest-item-text';
+        p.textContent = content;
+        item.appendChild(head);
+        item.appendChild(p);
+        if (title) {
+          list.insertBefore(item, title.nextSibling);
+        } else {
+          list.appendChild(item);
+        }
+        text.value = '';
+        btn.textContent = '留下这句话';
+      }).catch(function (e) {
+        btn.textContent = e.message || '再试一次';
+      }).finally(function () {
+        setTimeout(function () {
+          btn.disabled = false;
+          btn.textContent = oldText;
+        }, 1200);
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,177 @@
+/* ===== 念念 · 桌宠引擎样式 =====
+ * 跨端复用：桌面端跑在 Electron 透明窗口内，移动端跑在浏览器/WebView 全屏页内。
+ * 深色/浅色桌面背景都不影响透明窗口，宠物自身不设背景色。 */
+
+* { box-sizing: border-box; -webkit-user-select: none; user-select: none; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;   /* 关键：透明窗口/页面背景，宠物之外完全透明 */
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* 桌面端：窗口尺寸 = 舞台尺寸，宠物贴角放置，无滚动。
+   移动端：整页铺满，宠物可在视口内自由拖动。 */
+#stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* 移动端：整页铺满，宠物绝对定位可拖动 */
+body.mobile #stage { width: 100vw; height: 100vh; }
+body.mobile #pet { position: absolute; left: 40px; top: 40px; }
+
+/* 桌面端：窗口尺寸固定，宠物顶部留出气泡空间（气泡位于宠物上方约 40px） */
+body:not(.mobile) #pet { position: absolute; left: 16px; top: 40px; }
+
+.pet {
+  width: var(--pw, 168px);
+  height: var(--ph, 190px);
+  cursor: grab;
+  touch-action: none;         /* 阻止移动端默认手势，交给我们自己处理拖拽 */
+  position: relative;
+}
+
+.pet.dragging { cursor: grabbing; }
+
+.pet-svg, .pet-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;       /* 事件统一交给 .pet 容器，避免子元素抢焦点 */
+}
+
+/* ---------- SVG 猫咪动画 ---------- */
+
+/* 呼吸：整体轻微起伏，营造“活着”的感觉 */
+.pet-svg {
+  animation: breath 3.2s ease-in-out infinite;
+  transform-origin: 50% 92%;
+}
+
+@keyframes breath {
+  0%, 100% { transform: scale(1, 1); }
+  50%      { transform: scale(1.015, 1.045); }
+}
+
+/* 眨眼：周期性地闭一下眼 */
+.eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: blink 4.6s infinite;
+}
+@keyframes blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  94%, 97%      { transform: scaleY(0.08); }
+}
+
+/* 摇尾巴 */
+.tail {
+  transform-box: fill-box;
+  transform-origin: 88% 90%;
+  animation: wag 3.8s ease-in-out infinite;
+}
+@keyframes wag {
+  0%, 100% { transform: rotate(0deg); }
+  50%      { transform: rotate(-14deg); }
+}
+
+/* ---------- 待机动作（由 JS 加类，一次性播放后移除） ---------- */
+
+.pet-svg.act-look   { animation: look 1.2s ease-in-out; }
+@keyframes look {
+  0%, 100% { transform: translateX(0); }
+  35%      { transform: translateX(6px) rotate(2deg); }
+  70%      { transform: translateX(-6px) rotate(-2deg); }
+}
+
+.pet-svg.act-tailwag { animation: tailwag-burst 1s ease-in-out; }
+@keyframes tailwag-burst {
+  0%, 100% { transform: rotate(0deg); }
+  30%      { transform: rotate(-8deg); }
+  60%      { transform: rotate(8deg); }
+}
+
+.pet-svg.act-stretch { animation: stretch 1.4s ease-in-out; transform-origin: 50% 92%; }
+@keyframes stretch {
+  0%, 100% { transform: scale(1, 1); }
+  40%      { transform: scale(1.06, 0.94); }
+  70%      { transform: scale(0.97, 1.06); }
+}
+
+/* 单击“摸头”反应：开心地左右晃 */
+.pet-svg.act-pat { animation: pat 0.7s ease-in-out; }
+@keyframes pat {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  30%      { transform: translateX(-8px) rotate(-5deg); }
+  60%      { transform: translateX(8px) rotate(5deg); }
+}
+
+/* 双击“开心”：弹跳 */
+.pet-svg.act-happy { animation: happy 0.9s ease-in-out; transform-origin: 50% 92%; }
+@keyframes happy {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  30%      { transform: translateY(-22px) scale(1.05, 0.95); }
+  50%      { transform: translateY(0) scale(0.96, 1.05); }
+  70%      { transform: translateY(-12px) scale(1.03, 0.97); }
+}
+
+/* 拖拽中：暂停待机动作，宠物跟随 */
+.pet.dragging .pet-svg { animation: none; }
+
+/* ---------- image 模式：单张透明图，叠加呼吸浮动 ---------- */
+.pet-img {
+  animation: float 3.4s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+.pet.dragging .pet-img { animation: none; }
+
+/* ---------- 对话气泡 ---------- */
+.bubble {
+  position: absolute;
+  left: 50%;
+  top: -8px;
+  transform: translateX(-50%);
+  max-width: 220px;
+  padding: 8px 14px;
+  background: #fffdf7;
+  color: #5b4632;
+  border: 1.5px solid #e4cfae;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.4;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: none;
+  z-index: 5;
+}
+.bubble.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+.bubble::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  transform: translateX(-50%);
+  border: 7px solid transparent;
+  border-top-color: #fffdf7;
+  border-bottom: none;
+}
+
+/* ---------- 粒子画布 ---------- */
+#fx {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}

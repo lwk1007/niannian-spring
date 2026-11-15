@@ -1,0 +1,14 @@
+-- 补足 Node 版里存在于 JSON 而 V1 尚未落库的字段：
+-- 宠物互动计数、点灯数、最近访问、信件是否为模板兜底、胶囊打开时间。
+-- 不用 boolean 类型，统一 TINYINT，避免 H2 与 MySQL 在 BIT/BOOLEAN 上的差异。
+
+ALTER TABLE pets ADD COLUMN traits VARCHAR(60);
+ALTER TABLE pets ADD COLUMN stat_touch INT NOT NULL DEFAULT 0;
+ALTER TABLE pets ADD COLUMN stat_feed INT NOT NULL DEFAULT 0;
+ALTER TABLE pets ADD COLUMN stat_play INT NOT NULL DEFAULT 0;
+ALTER TABLE pets ADD COLUMN lit INT NOT NULL DEFAULT 0;
+ALTER TABLE pets ADD COLUMN last_seen TIMESTAMP(3);
+
+ALTER TABLE letters ADD COLUMN is_demo TINYINT NOT NULL DEFAULT 0;
+
+ALTER TABLE capsules ADD COLUMN opened_at TIMESTAMP(3);

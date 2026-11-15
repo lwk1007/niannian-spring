@@ -1,0 +1,854 @@
+/* ==================================================================
+   场景舞台 —— 从念念小程序 companion.wxss 移植（rpx 折算成 px，÷2）
+   全部用 CSS 绘制，不依赖图片素材；抠图主体靠自己的轮廓「站在场景里」。
+   ================================================================== */
+
+.nn-stage {
+  position: relative;
+  height: 230px;
+  margin: 10px 12px 0;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.nn-stage > * { position: absolute; }
+
+/* ---------- 场景选择条 ---------- */
+.nn-scene-bar {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  padding: 12px 12px 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.nn-scene-bar::-webkit-scrollbar { display: none; }
+.nn-scene-chip {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  padding: 4px 11px;
+  border-radius: 15px;
+  background: #f1ebde;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.nn-scene-chip.on {
+  background: #eceee4;
+  color: var(--olive);
+  font-weight: 600;
+}
+.nn-scene-chip-icon { margin-right: 4px; font-size: 13px; }
+.nn-scene-chip-name { line-height: 1.2; }
+
+/* ---------- 草地 ---------- */
+.nn-stage-grass {
+  background: linear-gradient(180deg, #f6e7ce 0%, #f7ecd6 46%, #edf0d8 100%);
+}
+.nn-sun { border-radius: 50%; }
+.nn-sun-grass {
+  left: 40px; top: 28px;
+  width: 46px; height: 46px;
+  background: radial-gradient(circle at 42% 38%, #fff6cf 0%, #ffe18c 60%, #ffd36b 100%);
+  box-shadow: 0 0 22px rgba(255, 214, 120, 0.65);
+}
+.nn-cloud {
+  background: #ffffff;
+  border-radius: 30px;
+}
+.nn-cloud::before, .nn-cloud::after {
+  content: '';
+  position: absolute;
+  background: #ffffff;
+  border-radius: 50%;
+}
+.nn-cloud-a {
+  right: 23px; top: 52px;
+  width: 66px; height: 21px;
+  opacity: 0.92;
+  animation: nn-cloud-drift 24s ease-in-out infinite;
+}
+.nn-cloud-a::before { left: 7px; top: -15px; width: 31px; height: 31px; }
+.nn-cloud-a::after { right: 8px; top: -10px; width: 23px; height: 23px; }
+.nn-cloud-b {
+  left: 23px; top: 90px;
+  width: 46px; height: 15px;
+  opacity: 0.72;
+  animation: nn-cloud-drift 32s ease-in-out infinite reverse;
+}
+.nn-cloud-b::before { left: 5px; top: -10px; width: 21px; height: 21px; }
+
+.nn-hill { border-radius: 50% 50% 0 0; }
+.nn-hill-back {
+  left: -90px; bottom: 27px;
+  width: 380px; height: 150px;
+  background: #c6cca8;
+}
+.nn-hill-front {
+  right: -70px; bottom: 15px;
+  width: 330px; height: 120px;
+  background: #a9bc82;
+}
+.nn-tuft {
+  width: 4px; height: 13px;
+  background: #7e9a5c;
+  border-radius: 4px;
+}
+.nn-tuft-1 { left: 30px; bottom: 37px; transform: rotate(-12deg); }
+.nn-tuft-2 { right: 60px; bottom: 47px; height: 10px; transform: rotate(10deg); }
+.nn-ground-grass {
+  left: 0; right: 0; bottom: 0;
+  height: 46px;
+  background: linear-gradient(180deg, #8aa566 0%, #68844c 100%);
+}
+
+/* ---------- 窗台 ---------- */
+.nn-stage-window { background: #f7f0e5; }
+.nn-win-glass {
+  left: 38px; right: 38px; top: 26px;
+  height: 116px;
+  box-sizing: border-box;
+  border: 7px solid #ffffff;
+  border-radius: 5px;
+  background: linear-gradient(180deg, #f6e7cf 0%, #fbf1df 100%);
+  box-shadow: 0 3px 11px rgba(176, 156, 128, 0.16);
+}
+.nn-win-bar-v {
+  left: 50%; top: 26px;
+  width: 6px; height: 116px;
+  margin-left: -3px;
+  background: #ffffff;
+}
+.nn-win-bar-h {
+  left: 38px; right: 38px; top: 83px;
+  height: 6px;
+  background: #ffffff;
+}
+.nn-win-light {
+  left: 48px; right: 48px; top: 146px;
+  height: 65px;
+  background: linear-gradient(180deg, rgba(255, 236, 180, 0.6) 0%, rgba(255, 236, 180, 0) 100%);
+}
+.nn-sill {
+  left: 24px; right: 24px; top: 144px;
+  height: 10px;
+  border-radius: 5px;
+  background: #ffffff;
+  box-shadow: 0 4px 9px rgba(176, 156, 128, 0.2);
+}
+.nn-pot { left: 60px; top: 110px; width: 42px; }
+.nn-pot-leaf {
+  width: 30px; height: 27px;
+  margin: 0 auto;
+  background: #7fbf8b;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-14deg);
+}
+.nn-pot-body {
+  width: 34px; height: 21px;
+  margin: -2px auto 0;
+  background: #d98e6a;
+  border-radius: 0 0 7px 7px;
+}
+.nn-ground-floor {
+  left: 0; right: 0; bottom: 0;
+  height: 74px;
+  background: linear-gradient(180deg, #e7d2b8 0%, #d9c0a2 100%);
+}
+
+/* ---------- 客厅 ---------- */
+.nn-stage-living {
+  background: linear-gradient(180deg, #f6eee3 0%, #efe2d1 100%);
+}
+.nn-ground-wood {
+  left: 0; right: 0; bottom: 0;
+  height: 48px;
+  background: linear-gradient(180deg, #e4cfb4 0%, #d6bb9b 100%);
+}
+.nn-lv-rug {
+  left: 20px; right: 20px; bottom: 9px;
+  height: 42px;
+  border-radius: 50%;
+  background: #ebd2c1;
+  opacity: 0.85;
+}
+.nn-lv-sofa-back {
+  left: 24px; bottom: 89px;
+  width: 160px; height: 43px;
+  border-radius: 13px 13px 0 0;
+  background: #c3dacc;
+}
+.nn-lv-sofa {
+  left: 31px; bottom: 52px;
+  width: 146px; height: 43px;
+  border-radius: 11px 11px 5px 5px;
+  background: #a9c7b7;
+}
+.nn-lv-lamp-pole {
+  right: 59px; bottom: 48px;
+  width: 5px; height: 59px;
+  background: #cbb69c;
+}
+.nn-lv-lamp-base {
+  right: 46px; bottom: 42px;
+  width: 31px; height: 7px;
+  border-radius: 4px;
+  background: #cbb69c;
+}
+.nn-lv-lamp {
+  right: 33px; bottom: 100px;
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 42%, #fff7d6 0%, #ffe3a6 66%, #ffd287 100%);
+  animation: nn-lamp-glow 4s ease-in-out infinite;
+}
+
+/* ---------- 海边 ---------- */
+.nn-stage-seaside {
+  background: linear-gradient(
+    180deg,
+    #ffebcb 0%, #ffd99f 30%, #bfd8d4 31%, #a4c6c0 58%, #f5e4c7 59%, #ebd2ac 100%
+  );
+}
+.nn-ss-sun {
+  left: 45px; top: 27px;
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff8d9 0%, #ffd98a 100%);
+  box-shadow: 0 0 24px rgba(255, 214, 120, 0.7);
+}
+.nn-ss-wave {
+  left: -10px; right: -10px;
+  height: 11px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.58);
+}
+.nn-ss-wave-1 { bottom: 98px; animation: nn-wave-bob 5s ease-in-out infinite; }
+.nn-ss-wave-2 {
+  bottom: 81px;
+  opacity: 0.42;
+  animation: nn-wave-bob 6.6s ease-in-out infinite;
+  animation-delay: -2s;
+}
+
+/* ---------- 星空 ---------- */
+.nn-stage-night {
+  background: linear-gradient(180deg, #1c1826 0%, #282234 56%, #332b3e 100%);
+}
+.nn-nt-moon {
+  right: 39px; top: 26px;
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 34%, #fffdf3 0%, #f2f4e6 72%, #e3e8d7 100%);
+  box-shadow: 0 0 23px rgba(226, 236, 214, 0.5);
+}
+.nn-nt-star {
+  position: absolute;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: #fff6e4;
+  box-shadow: 0 0 4px rgba(255, 244, 220, 0.7);
+  animation: nn-twinkle 2.8s ease-in-out infinite;
+}
+.nn-nt-star.sm { width: 3px; height: 3px; background: #fff8e6; box-shadow: none; }
+.nn-nt-star.lg { width: 6px; height: 6px; background: #f7e7b2; box-shadow: 0 0 8px rgba(247, 231, 178, 0.85); }
+.nn-nt-hill {
+  left: -40px; right: -40px; bottom: -20px;
+  height: 85px;
+  background: #17131f;
+  border-radius: 50% 50% 0 0;
+}
+.nn-nt-fly {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: #f7d77e;
+  box-shadow: 0 0 10px #f7d77e;
+}
+.nn-nt-fly-1 { left: 60px; bottom: 75px; animation: nn-fly-around 7s ease-in-out infinite; }
+.nn-nt-fly-2 { right: 75px; bottom: 110px; animation: nn-fly-around 9s ease-in-out infinite reverse; }
+.nn-nt-galaxy {
+  left: -12%; right: -12%; top: 24%;
+  height: 75px;
+  background: linear-gradient(90deg,
+    rgba(210, 200, 235, 0) 0%, rgba(222, 212, 240, 0.10) 28%,
+    rgba(234, 226, 246, 0.15) 50%, rgba(222, 212, 240, 0.10) 72%,
+    rgba(210, 200, 235, 0) 100%);
+  transform: rotate(-16deg);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* ==================================================================
+   宠物层：抠图主体靠轮廓站在场景里，脚下有一小团影子
+   ================================================================== */
+.nn-pet-layer {
+  position: absolute;
+  left: 0; right: 0; top: 0; bottom: 0;
+  pointer-events: none;
+}
+.nn-pet-anchor {
+  position: absolute;
+  bottom: 26px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: left 0.35s cubic-bezier(0.34, 1.35, 0.64, 1),
+    bottom 0.35s cubic-bezier(0.34, 1.35, 0.64, 1);
+}
+.nn-pet-anchor.dragging {
+  transition: none;
+  cursor: grabbing;
+}
+/* 抛投飞行中由 rAF 逐帧写位置，必须关掉 transition 否则会拖尾 */
+.nn-pet-anchor.flying {
+  transition: none;
+}
+.nn-pet-anchor.dragging .nn-pet-shadow {
+  transform: scale(0.72);
+  opacity: 0.5;
+}
+.nn-pet-anchor.flying .nn-pet-shadow {
+  transform: scale(0.5);
+  opacity: 0.22;
+}
+.nn-pet-wrap {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  /* 视线跟随：整体朝光标方向轻移，由 JS 写内联 transform */
+  transition: transform 0.22s ease-out;
+  will-change: transform;
+}
+.nn-pet-shadow {
+  position: absolute;
+  left: 50%; bottom: -8px;
+  width: 74px; height: 12px;
+  margin-left: -37px;
+  border-radius: 50%;
+  background: rgba(48, 38, 28, 0.2);
+}
+.nn-pet-body {
+  width: 110px;
+  height: 110px;
+  transform-origin: 50% 90%;
+  animation: nn-idle-bob 3s ease-in-out infinite;
+}
+/* 抠图贴纸：不套圆角、不投卡片影，靠自己的轮廓站在场景里 */
+.nn-pet-cut {
+  display: block;
+  width: 110px;
+  height: 110px;
+  object-fit: contain;
+}
+/* 没抠图时用整张照片（平铺圆角卡，作为兜底） */
+.nn-pet-img {
+  width: 110px;
+  height: 110px;
+  border-radius: 15px;
+  object-fit: cover;
+  box-shadow: 0 5px 13px rgba(48, 38, 28, 0.22);
+}
+.nn-pet-generic {
+  width: 110px;
+  height: 110px;
+  line-height: 110px;
+  font-size: 58px;
+  text-align: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+/* 阻止 img/emoji 的原生拖拽鬼影与文本选中，交互统一由 anchor 处理 */
+.nn-pet-cut,
+.nn-pet-img,
+.nn-pet-generic {
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* 互动动效 */
+.nn-pet-body.walking { animation: nn-walk-bob 0.52s ease-in-out infinite; }
+.nn-pet-body.anim-touch { animation: nn-nuzzle 0.95s ease; }
+.nn-pet-body.anim-feed { animation: nn-chew 1.4s ease; }
+.nn-pet-body.anim-play { animation: nn-hop 1.05s ease; }
+.nn-pet-body.anim-catch { animation: nn-wiggle 0.8s ease; }
+
+/* 待机动作：随机小动作，让宠物「活着」 */
+.nn-pet-body.anim-blink { animation: nn-blink 0.9s ease-in-out; }
+.nn-pet-body.anim-look { animation: nn-look 2.2s ease-in-out; }
+.nn-pet-body.anim-tilt { animation: nn-tilt 1.8s ease-in-out; }
+.nn-pet-body.anim-nod { animation: nn-nod 1.4s ease-in-out; }
+.nn-pet-body.anim-groom { animation: nn-groom 2.4s ease-in-out; }
+.nn-pet-body.anim-yawn { animation: nn-yawn 1.6s ease-in-out; }
+.nn-pet-body.anim-stretch { animation: nn-stretch 2s ease-in-out; }
+.nn-pet-body.anim-nap { animation: nn-nap 3.2s ease-in-out; }
+/* 拖拽：被拎起柔和悬浮（不再快速左右抖） */
+.nn-pet-body.anim-drag {
+  animation: nn-drag-lift 0.8s ease-in-out infinite;
+  filter: drop-shadow(0 7px 9px rgba(48, 38, 28, 0.16));
+}
+/* 抛投飞行：轻微翻滚，配 😵 表情 */
+.nn-pet-body.anim-fly {
+  animation: nn-fly-tumble 0.62s ease-in-out infinite;
+  filter: drop-shadow(0 9px 12px rgba(48, 38, 28, 0.18));
+}
+
+/* 表情 */
+.nn-pet-face {
+  position: absolute;
+  top: -13px; right: -9px;
+  font-size: 23px;
+  line-height: 1;
+  animation: nn-face-pop 0.32s cubic-bezier(0.34, 1.5, 0.64, 1);
+}
+
+/* 表情：飞的时候往内收，不然会飘在身体外面 */
+.nn-pet-anchor.flying .nn-pet-face {
+  top: -4px;
+  right: 6px;
+}
+
+/* 说话气泡：锚定在宠物本体上方，随宠物移动（作为 .nn-pet-anchor 子元素定位） */
+.nn-bubble-mini {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 10px;
+  width: max-content; /* 宽度由内容撑开，避免 shrink-to-fit 被压成竖条 */
+  max-width: 200px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.94);
+  border-radius: 11px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink);
+  box-shadow: 0 3px 9px rgba(48, 38, 28, 0.14);
+  word-break: break-all;
+  white-space: normal;
+  pointer-events: none; /* 不挡拖拽/点击 */
+  z-index: 3;
+}
+
+/* 零食 / 小球 */
+.nn-eat-food {
+  position: absolute;
+  bottom: 33px;
+  left: 50%;
+  margin-left: -11px;
+  font-size: 22px;
+  line-height: 1;
+  pointer-events: none;
+  animation: nn-food-fly 1.1s ease-out forwards;
+}
+/* 小球：位置由物理逐帧写内联 style，可拖拽 */
+.nn-play-ball {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 20px;
+  line-height: 1;
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  z-index: 4;
+  filter: drop-shadow(0 2px 3px rgba(48, 38, 28, 0.25));
+}
+.nn-play-ball.dragging {
+  cursor: grabbing;
+  filter: drop-shadow(0 6px 8px rgba(48, 38, 28, 0.28));
+}
+
+/* 食盆：作为宠物锚点的子元素，永远在它脚边 */
+.nn-bowl {
+  position: absolute;
+  bottom: -2px;
+  left: -46px;
+  width: 46px;
+  height: 24px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 1px;
+  pointer-events: none;
+  z-index: 2;
+  animation: nn-bowl-in 0.28s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.nn-bowl::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 13px;
+  border-radius: 3px 3px 46% 46% / 3px 3px 100% 100%;
+  background: linear-gradient(#efeade, #cec5b2);
+  box-shadow: inset 0 2px 3px rgba(255, 255, 255, 0.7), 0 3px 5px rgba(48, 38, 28, 0.18);
+}
+.nn-bowl-food {
+  position: relative;
+  margin-bottom: 10px;
+  font-size: 13px;
+  line-height: 1;
+  animation: nn-bowl-eat 0.45s ease-out;
+}
+
+/* 宠物信息 */
+.nn-scene-info {
+  padding: 16px 20px 22px;
+  text-align: center;
+}
+.nn-pet-name { font-size: 21px; font-weight: 600; color: var(--ink); }
+.nn-pet-status { margin-top: 4px; font-size: 13px; color: var(--muted); }
+.nn-pet-greeting { margin-top: 8px; font-size: 13px; color: var(--olive); }
+
+/* ==================================================================
+   动效 keyframes
+   ================================================================== */
+@keyframes nn-cloud-drift {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-18px); }
+}
+@keyframes nn-wave-bob {
+  0%, 100% { transform: translateX(-7px) scaleY(1); }
+  50% { transform: translateX(7px) scaleY(0.65); }
+}
+@keyframes nn-twinkle {
+  0%, 100% { opacity: 0.35; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.25); }
+}
+@keyframes nn-fly-around {
+  0%, 100% { transform: translate(0, 0); opacity: 0.5; }
+  50% { transform: translate(15px, -20px); opacity: 1; }
+}
+@keyframes nn-lamp-glow {
+  0%, 100% { box-shadow: 0 0 21px rgba(255, 212, 138, 0.6); }
+  50% { box-shadow: 0 0 31px rgba(255, 212, 138, 0.85); }
+}
+@keyframes nn-idle-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+@keyframes nn-walk-bob {
+  0%, 100% { transform: translateY(0) rotate(-1.5deg); }
+  50% { transform: translateY(-6px) rotate(1.5deg); }
+}
+@keyframes nn-nuzzle {
+  0%, 100% { transform: translateX(0) scale(1); }
+  22% { transform: translateX(-4px) scale(1.04) rotate(-2deg); }
+  52% { transform: translateX(4px) scale(1.05) rotate(2deg); }
+  78% { transform: translateX(-2px) scale(1.02); }
+}
+@keyframes nn-chew {
+  0%, 100% { transform: scaleY(1) scaleX(1); }
+  12% { transform: scaleY(0.9) scaleX(1.05); }
+  24% { transform: scaleY(1.03) scaleX(0.98); }
+  36% { transform: scaleY(0.9) scaleX(1.05); }
+  48% { transform: scaleY(1.03) scaleX(0.98); }
+  60% { transform: scaleY(0.92) scaleX(1.04); }
+  74% { transform: scaleY(1.02) scaleX(0.99); }
+}
+@keyframes nn-hop {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  18% { transform: translateY(-36px) rotate(-5deg); }
+  36% { transform: translateY(0) scaleY(0.94); }
+  54% { transform: translateY(-24px) rotate(4deg); }
+  72% { transform: translateY(0) scaleY(0.96); }
+  88% { transform: translateY(-8px); }
+}
+@keyframes nn-wiggle {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(8deg); }
+  75% { transform: rotate(-8deg); }
+}
+@keyframes nn-face-pop {
+  0% { transform: scale(0.2) rotate(-16deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+@keyframes nn-food-fly {
+  0% { transform: translateY(18px) scale(0.5); opacity: 0; }
+  28% { transform: translateY(3px) scale(1); opacity: 1; }
+  100% { transform: translateY(-84px) scale(0.45); opacity: 0; }
+}
+@keyframes nn-ball-hop {
+  0% { transform: translate(0, 0) scale(0.6); opacity: 0; }
+  18% { transform: translate(0, -64px) scale(1); opacity: 1; }
+  36% { transform: translate(35px, 0); }
+  54% { transform: translate(65px, -44px); }
+  72% { transform: translate(94px, 0); }
+  88% { transform: translate(119px, -22px); }
+  100% { transform: translate(138px, 0); opacity: 0; }
+}
+
+/* ---------- 待机动作 keyframes ---------- */
+@keyframes nn-blink {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.94); }
+}
+@keyframes nn-look {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  18% { transform: translateX(-9px) rotate(-3deg); }
+  42% { transform: translateX(7px) rotate(2deg); }
+  66% { transform: translateX(-4px) rotate(0); }
+}
+@keyframes nn-tilt {
+  0%, 100% { transform: rotate(0) translateY(0); }
+  30% { transform: rotate(-8deg) translateY(-2px); }
+  58% { transform: rotate(-8deg) translateY(-2px); }
+}
+@keyframes nn-nod {
+  0%, 100% { transform: translateY(0); }
+  30% { transform: translateY(5px) rotate(1deg); }
+  60% { transform: translateY(2px); }
+  80% { transform: translateY(4px); }
+}
+@keyframes nn-groom {
+  0%, 100% { transform: rotate(0) translateY(0); }
+  25% { transform: rotate(-4deg) translateY(-2px); }
+  50% { transform: rotate(3deg) translateY(-1px); }
+  75% { transform: rotate(-2deg) translateY(-2px); }
+}
+@keyframes nn-yawn {
+  0%, 100% { transform: translateY(0) scale(1); }
+  40% { transform: translateY(-3px) scale(1.05); }
+  70% { transform: translateY(-2px) scale(1.03); }
+}
+@keyframes nn-stretch {
+  0%, 100% { transform: translateY(0) scaleY(1) scaleX(1); }
+  30% { transform: translateY(-9px) scaleY(1.06) scaleX(0.95); }
+  58% { transform: translateY(-11px) scaleY(1.08) scaleX(0.94); }
+}
+@keyframes nn-nap {
+  0%, 100% { transform: translateY(0) scale(1); }
+  45% { transform: translateY(4px) scaleY(0.92) scaleX(1.03); }
+  70% { transform: translateY(3px) scaleY(0.94); }
+}
+@keyframes nn-drag-lift {
+  0%, 100% { transform: scale(1.04) rotate(-1.5deg); }
+  50% { transform: scale(1.06) rotate(1.5deg); }
+}
+/* 抛投飞行：轻微翻滚，幅度别大，否则看着像被甩坏 */
+@keyframes nn-fly-tumble {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  35% { transform: rotate(-13deg) scale(0.97); }
+  70% { transform: rotate(10deg) scale(1.02); }
+}
+/* 食盆从上面落下 */
+@keyframes nn-bowl-in {
+  from { opacity: 0; transform: translateY(-15px) scale(0.72); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes nn-bowl-eat {
+  from { opacity: 0; transform: scale(0.4); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* ---------- 存在强度分档 + 一键暂停 ---------- */
+
+/* 一键暂停：停掉场景里所有 CSS 动画（云、海浪、星星、灯、呼吸、待机） */
+.nn-stage.paused * {
+  animation-play-state: paused !important;
+}
+
+/* 静静留影：宠物主体完全静止，场景环境动画保留，像一张会呼吸的照片 */
+.nn-stage.nn-mode-still .nn-pet-body {
+  animation: none;
+}
+
+/* ---------- 纪念植物：一株随浇水慢慢长的花 ---------- */
+
+.nn-plant {
+  position: absolute;
+  left: 5%;
+  bottom: 9px;
+  width: 48px;
+  height: 80px;
+  pointer-events: none;
+}
+
+/* 花盆（所有阶段都在） */
+.nn-plant-pot {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 18px;
+  background: linear-gradient(180deg, #cf9163, #b07248);
+  border-radius: 4px 4px 9px 9px;
+}
+.nn-plant-pot::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  height: 7px;
+  background: #d99d70;
+  border-radius: 4px;
+}
+
+/* 盆里的土 */
+.nn-plant-soil {
+  position: absolute;
+  left: 50%;
+  bottom: 17px;
+  transform: translateX(-50%);
+  width: 26px;
+  height: 7px;
+  background: #6b4a33;
+  border-radius: 50%;
+}
+
+/* 植物主体（茎叶花），从土面向上长，绕底部摆动 */
+.nn-plant-body {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 56px;
+  transform-origin: 50% 100%;
+}
+
+.nn-stem {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 3px;
+  height: 30px;
+  background: #6f9a4e;
+  border-radius: 2px;
+  transition: height 0.5s ease;
+}
+
+.nn-leaf {
+  position: absolute;
+  width: 13px;
+  height: 7px;
+  background: #7fb25e;
+  border-radius: 60% 40% 60% 0;
+  opacity: 0;
+  transition: opacity 0.4s ease, width 0.5s ease, height 0.5s ease;
+}
+.nn-leaf-1 { left: 4px; bottom: 14px; transform: rotate(-28deg); }
+.nn-leaf-2 { right: 4px; bottom: 14px; transform: rotate(28deg) scaleX(-1); }
+.nn-leaf-3 { left: 50%; bottom: 24px; transform: translateX(-50%) rotate(-4deg); }
+
+.nn-flower {
+  position: absolute;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 10px;
+  background: #f2c86b;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  box-shadow:
+    0 -7px 0 -2px #f4a9b8,
+    0 7px 0 -2px #f4a9b8,
+    -7px 0 0 -2px #f4a9b8,
+    7px 0 0 -2px #f4a9b8;
+}
+
+/* —— 阶段形态 —— */
+
+/* 种子：土里半埋一枚种子，还没发芽 */
+.nn-plant.p-seed .nn-stem { height: 0; }
+.nn-plant.p-seed .nn-plant-soil::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -5px;
+  transform: translateX(-50%);
+  width: 9px;
+  height: 8px;
+  background: #a5815c;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+}
+
+/* 发芽：两片小子叶 */
+.nn-plant.p-sprout .nn-stem { height: 8px; }
+.nn-plant.p-sprout .nn-leaf-1,
+.nn-plant.p-sprout .nn-leaf-2 {
+  opacity: 1;
+  width: 9px;
+  height: 5px;
+  bottom: 6px;
+}
+
+/* 幼苗：茎立起来 + 三片叶 */
+.nn-plant.p-seedling .nn-stem { height: 20px; }
+.nn-plant.p-seedling .nn-leaf-1,
+.nn-plant.p-seedling .nn-leaf-2,
+.nn-plant.p-seedling .nn-leaf-3 {
+  opacity: 1;
+  width: 11px;
+  height: 6px;
+}
+.nn-plant.p-seedling .nn-leaf-3 { bottom: 18px; }
+
+/* 成株：更高的茎 + 更大的叶 */
+.nn-plant.p-grown .nn-stem { height: 30px; }
+.nn-plant.p-grown .nn-leaf-1,
+.nn-plant.p-grown .nn-leaf-2,
+.nn-plant.p-grown .nn-leaf-3 {
+  opacity: 1;
+  width: 14px;
+  height: 8px;
+}
+.nn-plant.p-grown .nn-leaf-3 { bottom: 25px; }
+
+/* 开花：成株 + 花朵 */
+.nn-plant.p-bloom .nn-stem { height: 30px; }
+.nn-plant.p-bloom .nn-leaf-1,
+.nn-plant.p-bloom .nn-leaf-2,
+.nn-plant.p-bloom .nn-leaf-3 {
+  opacity: 1;
+  width: 14px;
+  height: 8px;
+}
+.nn-plant.p-bloom .nn-leaf-3 { bottom: 25px; }
+.nn-plant.p-bloom .nn-flower { opacity: 1; }
+
+/* 浇水：植物摆一下 + 两滴水珠落下 */
+.nn-plant.watering .nn-plant-body {
+  animation: nn-plant-sway 0.9s ease;
+}
+@keyframes nn-plant-sway {
+  0%, 100% { transform: translateX(-50%) rotate(0); }
+  30% { transform: translateX(-50%) rotate(3deg); }
+  60% { transform: translateX(-50%) rotate(-3deg); }
+}
+
+.nn-drop {
+  position: absolute;
+  top: 0;
+  width: 5px;
+  height: 7px;
+  background: #7fb8d8;
+  border-radius: 50%;
+  animation: nn-drop-fall 1.3s ease forwards;
+}
+.nn-drop-1 { left: 30%; }
+.nn-drop-2 { left: 62%; animation-delay: 0.2s; }
+@keyframes nn-drop-fall {
+  0% { transform: translateY(0); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateY(48px); opacity: 0; }
+}
+

@@ -1,0 +1,39 @@
+{
+  "name": "niannian-desktop-pet",
+  "version": "1.0.0",
+  "description": "念念 · 桌面宠物：透明无边框悬浮窗、鼠标/触摸交互、基础动画，核心引擎跨桌面端与移动端复用",
+  "main": "desktop/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "serve": "node desktop/serve.js",
+    "build": "electron-builder",
+    "dist": "electron-builder"
+  },
+  "author": "niannian",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "site.niannian.desktop-pet",
+    "productName": "念念桌宠",
+    "files": [
+      "desktop/**/*",
+      "engine/**/*"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": ["nsis", "portable"]
+    },
+    "mac": {
+      "target": ["dmg"]
+    },
+    "linux": {
+      "target": ["AppImage"]
+    }
+  }
+}

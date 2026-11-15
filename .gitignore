@@ -1,0 +1,11 @@
+target/
+data/
+.tmp/
+*.log
+.idea/
+*.iml
+.vscode/
+.DS_Store
+node_modules/
+frontend/node_modules/
+desktop-pet/node_modules/

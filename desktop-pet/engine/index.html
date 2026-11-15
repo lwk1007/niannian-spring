@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>念念 · 桌宠</title>
+  <link rel="stylesheet" href="pet.css" />
+</head>
+<body>
+  <!-- 宠物舞台：桌面端由 Electron 透明窗口承载，移动端整页铺满 -->
+  <div id="stage">
+    <!-- 宠物主体：默认内联 SVG 猫，可被 config.render.mode = image / frames 替换 -->
+    <div id="pet" class="pet" role="img" aria-label="宠物">
+      <svg class="pet-svg" viewBox="0 0 160 184" xmlns="http://www.w3.org/2000/svg">
+        <!-- 尾巴 -->
+        <g class="tail">
+          <path d="M 118 100 C 146 98 150 68 138 52 C 130 44 120 48 124 58"
+                fill="none" stroke="#d9a35f" stroke-width="10" stroke-linecap="round" />
+        </g>
+        <!-- 前爪 -->
+        <g class="legs">
+          <ellipse cx="56" cy="160" rx="16" ry="10" fill="#f7dcb0" stroke="#d9a35f" stroke-width="3" />
+          <ellipse cx="104" cy="160" rx="16" ry="10" fill="#f7dcb0" stroke="#d9a35f" stroke-width="3" />
+        </g>
+        <!-- 身体 -->
+        <g class="body">
+          <ellipse cx="80" cy="122" rx="46" ry="46" fill="#f7dcb0" stroke="#d9a35f" stroke-width="3" />
+          <ellipse cx="80" cy="134" rx="26" ry="20" fill="#fdf0d8" />
+        </g>
+        <!-- 头 + 耳 -->
+        <g class="head">
+          <path class="ear ear-l" d="M 52 42 L 46 12 L 74 32 Z" fill="#f7dcb0" stroke="#d9a35f" stroke-width="3" stroke-linejoin="round" />
+          <path class="ear ear-r" d="M 108 42 L 114 12 L 86 32 Z" fill="#f7dcb0" stroke="#d9a35f" stroke-width="3" stroke-linejoin="round" />
+          <path class="ear-in ear-in-l" d="M 53 34 L 49 18 L 67 30 Z" fill="#f0b8ae" />
+          <path class="ear-in ear-in-r" d="M 107 34 L 111 18 L 93 30 Z" fill="#f0b8ae" />
+          <circle cx="80" cy="66" r="34" fill="#f7dcb0" stroke="#d9a35f" stroke-width="3" />
+        </g>
+        <!-- 脸 -->
+        <g class="face">
+          <ellipse class="eye eye-l" cx="67" cy="64" rx="5" ry="7.5" fill="#3a2a1a" />
+          <ellipse class="eye eye-r" cx="93" cy="64" rx="5" ry="7.5" fill="#3a2a1a" />
+          <path class="nose" d="M 78 74 L 82 74 L 80 78 Z" fill="#c98a6b" />
+          <path class="mouth" d="M 80 78 Q 74 84 69 80 M 80 78 Q 86 84 91 80"
+                fill="none" stroke="#c98a6b" stroke-width="2" stroke-linecap="round" />
+          <path class="whisker" d="M 30 66 L 52 70 M 30 76 L 52 74"
+                stroke="#d9a35f" stroke-width="1.5" stroke-linecap="round" opacity="0.6" />
+          <path class="whisker" d="M 130 66 L 108 70 M 130 76 L 108 74"
+                stroke="#d9a35f" stroke-width="1.5" stroke-linecap="round" opacity="0.6" />
+          <circle class="cheek" cx="58" cy="75" r="5" fill="#f5c9bf" opacity="0.7" />
+          <circle class="cheek" cx="102" cy="75" r="5" fill="#f5c9bf" opacity="0.7" />
+        </g>
+      </svg>
+    </div>
+    <!-- 对话气泡 -->
+    <div id="bubble" class="bubble" hidden></div>
+  </div>
+  <!-- 粒子画布：爱心/星星等点击反馈 -->
+  <canvas id="fx"></canvas>
+
+  <script src="config.js"></script>
+  <script src="pet.js"></script>
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>抠图链路探针</title>
+  </head>
+  <body>
+    <pre id="log">idle</pre>
+    <script type="module">
+      import { aiCutout, getMattingError } from '/src/app/lib/matting.js'
+
+      const logEl = document.getElementById('log')
+      const log = (s) => (logEl.textContent = s)
+
+      /** 造一张复杂背景 + 明确主体的图（渐变 + 噪点 + 木地板条纹），逼真地走 AI 通道 */
+      function makeTestImage() {
+        const c = document.createElement('canvas')
+        c.width = 640
+        c.height = 480
+        const x = c.getContext('2d')
+        const g = x.createLinearGradient(0, 0, 640, 480)
+        g.addColorStop(0, '#7fa06a')
+        g.addColorStop(0.5, '#4b6b4a')
+        g.addColorStop(1, '#2f3f2c')
+        x.fillStyle = g
+        x.fillRect(0, 0, 640, 480)
+        for (let i = 0; i < 600; i++) {
+          x.fillStyle = `rgba(255,255,255,${Math.random() * 0.12})`
+          x.fillRect(Math.random() * 640, Math.random() * 480, 3, 3)
+        }
+        for (let i = 0; i < 480; i += 40) {
+          x.fillStyle = 'rgba(0,0,0,0.08)'
+          x.fillRect(0, i, 640, 6)
+        }
+        x.fillStyle = '#d9c6a5'
+        x.beginPath()
+        x.ellipse(320, 300, 110, 120, 0, 0, Math.PI * 2)
+        x.fill()
+        x.beginPath()
+        x.arc(320, 180, 80, 0, Math.PI * 2)
+        x.fill()
+        x.beginPath()
+        x.moveTo(255, 130)
+        x.lineTo(275, 70)
+        x.lineTo(300, 120)
+        x.closePath()
+        x.fill()
+        x.beginPath()
+        x.moveTo(385, 130)
+        x.lineTo(365, 70)
+        x.lineTo(340, 120)
+        x.closePath()
+        x.fill()
+        x.fillStyle = '#2b2b2b'
+        x.beginPath()
+        x.arc(292, 175, 9, 0, Math.PI * 2)
+        x.fill()
+        x.beginPath()
+        x.arc(348, 175, 9, 0, Math.PI * 2)
+        x.fill()
+        return c.toDataURL('image/jpeg', 0.9)
+      }
+
+      /** 统计结果图的透明度，验证真的抠掉了背景 */
+      function alphaStats(dataUrl) {
+        return new Promise((resolve) => {
+          const img = new Image()
+          img.onload = () => {
+            const c = document.createElement('canvas')
+            c.width = img.naturalWidth
+            c.height = img.naturalHeight
+            const x = c.getContext('2d')
+            x.drawImage(img, 0, 0)
+            const d = x.getImageData(0, 0, c.width, c.height).data
+            let transparent = 0
+            let opaque = 0
+            for (let i = 3; i < d.length; i += 4) {
+              if (d[i] < 16) transparent++
+              else if (d[i] > 240) opaque++
+            }
+            const total = d.length / 4
+            resolve({
+              w: c.width,
+              h: c.height,
+              transparentRatio: +(transparent / total).toFixed(4),
+              opaqueRatio: +(opaque / total).toFixed(4)
+            })
+          }
+          img.onerror = () => resolve(null)
+          img.src = dataUrl
+        })
+      }
+
+      /** 纯色底（摄影棚布那种）+ 明确主体，验证第二级色键通道 */
+      function makeFlatBgImage() {
+        const c = document.createElement('canvas')
+        c.width = 600
+        c.height = 600
+        const x = c.getContext('2d')
+        x.fillStyle = '#6b8db5'
+        x.fillRect(0, 0, 600, 600)
+        x.fillStyle = '#e8dccb'
+        x.beginPath()
+        x.ellipse(300, 400, 130, 150, 0, 0, Math.PI * 2)
+        x.fill()
+        x.beginPath()
+        x.arc(300, 250, 95, 0, Math.PI * 2)
+        x.fill()
+        x.beginPath()
+        x.moveTo(222, 195)
+        x.lineTo(245, 120)
+        x.lineTo(278, 175)
+        x.closePath()
+        x.fill()
+        x.beginPath()
+        x.moveTo(378, 195)
+        x.lineTo(355, 120)
+        x.lineTo(322, 175)
+        x.closePath()
+        x.fill()
+        x.fillStyle = '#3a3a3a'
+        x.beginPath()
+        x.arc(268, 245, 11, 0, Math.PI * 2)
+        x.fill()
+        x.beginPath()
+        x.arc(332, 245, 11, 0, Math.PI * 2)
+        x.fill()
+        return c.toDataURL('image/jpeg', 0.92)
+      }
+
+      window.runChroma = async () => {
+        const { dewhiteCutout } = await import('/src/app/lib/cutout.js')
+        const t0 = performance.now()
+        const src = makeFlatBgImage()
+        const r = await dewhiteCutout(src)
+        const ms = Math.round(performance.now() - t0)
+        const stats = r.cutout ? await alphaStats(r.cutout) : null
+        return { method: r.method, needAI: r.needAI, ms, stats, out: r.cutout }
+      }
+
+      window.runProbe = async () => {
+        const t0 = performance.now()
+        const progress = []
+        const src = makeTestImage()
+        log('downloading model...')
+        const out = await aiCutout(src, (p) => {
+          progress.push(Math.round((p || 0) * 100))
+        })
+        const ms = Math.round(performance.now() - t0)
+        const stats = out ? await alphaStats(out) : null
+        log(out ? 'ok' : 'fail: ' + getMattingError())
+        return {
+          ok: !!out,
+          error: getMattingError(),
+          ms,
+          progressSamples: progress.filter((v, i, a) => i === 0 || v !== a[i - 1]).slice(0, 12),
+          progressMax: progress.length ? Math.max(...progress) : 0,
+          dataUrlLen: out ? out.length : 0,
+          stats,
+          out
+        }
+      }
+    </script>
+  </body>
+</html>
